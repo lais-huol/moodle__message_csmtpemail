@@ -38,7 +38,7 @@ class message_output_csmtpemail extends message_output {
      */
     function send_message($eventdata) {
         global $CFG;
-
+        
         // skip any messaging suspended and deleted users
         if ($eventdata->userto->auth === 'nologin' or $eventdata->userto->suspended or $eventdata->userto->deleted) {
             return true;
@@ -48,7 +48,7 @@ class message_output_csmtpemail extends message_output {
         $recipient = null;
 
         //check if the recipient has a different email address specified in their messaging preferences Vs their user profile
-        $emailmessagingpreference = get_user_preferences('message_processor_email_csmtpemail', null, $eventdata->userto);
+        $emailmessagingpreference = get_user_preferences('message_processor_csmtpemail', null, $eventdata->userto);
         $emailmessagingpreference = clean_param($emailmessagingpreference, PARAM_EMAIL);
 
         // If the recipient has set an email address in their preferences use that instead of the one in their profile
@@ -89,22 +89,23 @@ class message_output_csmtpemail extends message_output {
                 $replytoname = $eventdata->replytoname;
             }
         }
-        $account = get_config('message_custonsmtp_email', 'mmsmtp');
+        $account = get_config('message_csmtpemail','mmsmtp');
+
         if($account){
             require_once($CFG->dirroot.'/local/custonsmtp/locallib.php');
-            $account = $DB->get_record('custonsmtp_accounts',array('id'=>$account));
+
             $mailOb = new stdClass();
             $mailOb->to_adress = $recipient->email;
-            $mailOb->from_mail = $account->username;
+            $mailOb->account = $account;
             $mailOb->from_name = $eventdata->userfrom->firstname;
+            $mailOb->from_mail = $eventdata->userfrom->email;
             $mailOb->title = $eventdata->subject;
             $mailOb->body = $eventdata->fullmessage;
+
             $mailOb->bodyHTML = $eventdata->fullmessagehtml;
             $mailOb->bodyHTML = $eventdata->fullmessagehtml;
             $mailOb->replyto = $replyto;
-            SendMailToQueue($mailOb);
-            $result = email_to_user($recipient, $eventdata->userfrom, $eventdata->subject, $eventdata->fullmessage,
-                                $eventdata->fullmessagehtml, $attachment, $attachname, true, $replyto, $replytoname);
+            $result = SendMailToQueue($mailOb);
         }
         else{
             $result = email_to_user($recipient, $eventdata->userfrom, $eventdata->subject, $eventdata->fullmessage,
@@ -179,7 +180,7 @@ class message_output_csmtpemail extends message_output {
      */
     function process_form($form, &$preferences){
         if (isset($form->email_csmtp)) {
-            $preferences['message_processor_email_csmtp'] = $form->email_csmtp;
+            $preferences['message_processor_csmtpemail'] = $form->email_csmtp;
         }
         if (isset($form->preference_mailcharset)) {
             $preferences['mailcharset'] = $form->preference_mailcharset;
@@ -202,7 +203,7 @@ class message_output_csmtpemail extends message_output {
      * @param int $userid the user id
      */
     function load_data(&$preferences, $userid){
-        $preferences->email_csmtp = get_user_preferences( 'message_processor_email_csmtp', '', $userid);
+        $preferences->email_csmtp = get_user_preferences( 'message_processor_csmtpemail', '', $userid);
     }
 
     /**
