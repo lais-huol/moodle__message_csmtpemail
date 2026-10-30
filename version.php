@@ -24,7 +24,7 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version   = 2015_05_11_00;        // The current plugin version (Date: YYYYMMDDXX)
+$plugin->version   = 2026_10_30_00;        // The current plugin version (Date: YYYYMMDDXX)
 $plugin->requires  = 2015_05_05_00;        // Requires this Moodle version
 $plugin->component = 'message_csmtpemail';  // Full name of the plugin (used for diagnostics)
 $plugin->dependencies = array(
